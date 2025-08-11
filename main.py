@@ -1,9 +1,13 @@
 import pygame
 import os
 
+#tela variaveis
+Tlargura = 1366
+Taltura = 768
+
 # Inicialização
 pygame.init()
-screen = pygame.display.set_mode((700, 500), pygame.RESIZABLE)
+screen = pygame.display.set_mode((Tlargura, Taltura))
 clock = pygame.time.Clock()
 FPS = 60
 pygame.display.set_caption("Rockeiros vs Funkeiros")
@@ -41,8 +45,8 @@ def atualizar_grade_para_tela():
 # Classe Projetil
 class Projetil:
     def __init__(self, x, y, vx=4):
-        self.image = pygame.Surface((10, 5))
-        self.image.fill((0, 0, 255))
+        self.image = pygame.image.load(os.path.join('assets','morcego','0.png')).convert_alpha()
+        self.image = pygame.transform.scale(self.image, (40, 20))
         self.rect = self.image.get_rect(midleft=(x, y))
         self.vx = vx
 
@@ -57,7 +61,7 @@ class Rockeiro:
     def __init__(self, linha, coluna):
         self.linha = linha
         self.coluna = coluna
-        imagem_original = pygame.image.load(os.path.join('assets', 'riven.png'))
+        imagem_original = pygame.image.load(os.path.join('assets','ozzy', '0.png'))
         self.image_original = imagem_original
         self.image = None
         self.rect = None
@@ -135,15 +139,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
-            elif event.type == pygame.VIDEORESIZE:
-                screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                atualizar_grade_para_tela()
-                # Reposiciona todos os bonecos
-                for linha in range(LINHAS):
-                    for coluna in range(COLUNAS):
-                        if isinstance(grade[linha][coluna], Rockeiro):
-                            grade[linha][coluna].atualizar_posicao()
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
