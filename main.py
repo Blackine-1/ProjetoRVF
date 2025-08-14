@@ -2,6 +2,16 @@ from common import *
 
 clock = pygame.time.Clock()
 grade = [[None for _ in range(COLUNAS)] for _ in range(LINHAS)]
+pa_mode = False  # modo pá inicialmente desligado
+
+def pa():
+    seringa_img = pygame.image.load(os.path.join('assets', 'seringa.png')).convert_alpha()
+    seringa_img = pygame.transform.scale(seringa_img, (140, 70))
+    seringa_caixa = seringa_img.get_rect(topright=(1300, 10))  # posição fixa
+    return seringa_caixa, seringa_img
+
+# carrega a seringa
+seringa_caixa, seringa_img = pa()
 
 def atualizar_grade_para_tela():
     global TAMANHO_CELULA, GRADE_X, GRADE_Y
@@ -36,6 +46,9 @@ def draw():
     screen.fill(BRANCO)
     desenhar_grade()
 
+    # desenha seringa
+    screen.blit(seringa_img, seringa_caixa)
+
     for linha in range(LINHAS):
         for coluna in range(COLUNAS):
             celula = grade[linha][coluna]
@@ -52,6 +65,7 @@ def draw():
     pygame.display.flip()
 
 def main():
+    global pa_mode
     running = True
     while running:
         clock.tick(FPS)
@@ -61,12 +75,21 @@ def main():
                 running = False
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                celula = pegar_celula(event.pos)
-                if celula:
-                    lin, col = celula
-                    if grade[lin][col] is None:
-                        grade[lin][col] = Rockeiro(lin, col)
-                        print(f"Plantou na célula: linha {lin}, coluna {col}")
+                if seringa_caixa.collidepoint(event.pos):
+                    pa_mode = not pa_mode
+                    print(f"Modo pá {'ativado' if pa_mode else 'desativado'}")
+                else:
+                    celula = pegar_celula(event.pos)
+                    if celula:
+                        lin, col = celula
+                        if pa_mode:
+                            if isinstance(grade[lin][col], Rockeiro):
+                                grade[lin][col] = None
+                                print(f"Removeu na célula: linha {lin}, coluna {col}")
+                        else:
+                            if grade[lin][col] is None:
+                                grade[lin][col] = Rockeiro(lin, col)
+                                print(f"Plantou na célula: linha {lin}, coluna {col}")
 
         for linha in range(LINHAS):
             for coluna in range(COLUNAS):
