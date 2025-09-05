@@ -1,105 +1,128 @@
-from common import *
+import pygame
+import sys
+import os
 
-clock = pygame.time.Clock()
-grade = [[None for _ in range(COLUNAS)] for _ in range(LINHAS)]
-pa_mode = False  # modo pá inicialmente desligado
+from rockeiro import Rockeiro
+from quadrado1 import Quadrado1
+from Quadrado2 import quadrado2
+from config import *
 
-def pa():
+pygame.init()
+
+# inicialização da tela
+screen = pygame.display.set_mode((TLARGURA, TALTURA))
+pygame.display.set_caption("Jogo de Rockeiro")
+
+# fonte
+fonte = pygame.font.SysFont(None, 30)
+
+# --------------------------
+# Função para carregar a seringa
+def seringa():
     seringa_img = pygame.image.load(os.path.join('assets', 'seringa.png')).convert_alpha()
-    seringa_img = pygame.transform.scale(seringa_img, (140, 70))
-    seringa_caixa = seringa_img.get_rect(topright=(1300, 10))  # posição fixa
+    seringa_img = pygame.transform.scale(seringa_img, (60, 60))  # menor tamanho
+    seringa_caixa = seringa_img.get_rect(topleft=(1300, 10))  # canto superior direito
     return seringa_caixa, seringa_img
 
-# carrega a seringa
-seringa_caixa, seringa_img = pa()
+seringa_caixa, seringa_img = seringa()
+# --------------------------
 
-def atualizar_grade_para_tela():
-    global TAMANHO_CELULA, GRADE_X, GRADE_Y
-    largura_tela, altura_tela = screen.get_size()
+# cria grade
+grade = [[None for _ in range(COLUNAS)] for _ in range(LINHAS)]
 
-    largura_grade = largura_tela
-    altura_grade = altura_tela
+# lista de personagens disponíveis
+personagens_disponiveis = {
+    "rockeiro": Rockeiro,
+    "Axelrose": Quadrado1,
+    "quadrado2": quadrado2,
+}
 
-    TAMANHO_CELULA = int(min(largura_grade / COLUNAS, altura_grade / LINHAS))
+personagem_selecionado = "rockeiro"
+pa_mode = False  # modo pá/remover
 
-    largura_total = TAMANHO_CELULA * COLUNAS
-    altura_total = TAMANHO_CELULA * LINHAS
-    GRADE_X = (largura_tela - largura_total) // 2
-    GRADE_Y = (altura_tela - altura_total) // 2
+# botões para seleção
+botoes = {
+    "rockeiro": pygame.Rect(50, TALTURA - 90, 120, 50),
+    "Axelrose": pygame.Rect(200, TALTURA - 90, 120, 50),
+    "quadrado2": pygame.Rect(350, TALTURA - 90, 120, 50),
+}
+
+# -------------------------
+def desenhar_botoes():
+    for nome, rect in botoes.items():
+        cor = (0, 255, 0) if nome == personagem_selecionado else (150, 150, 150)
+        pygame.draw.rect(screen, cor, rect)
+        texto = fonte.render(nome, True, (0, 0, 0))
+        screen.blit(texto, (rect.x + 10, rect.y + 15))
 
 def desenhar_grade():
-    for linha in range(LINHAS):
-        for coluna in range(COLUNAS):
-            x = GRADE_X + coluna * TAMANHO_CELULA
-            y = GRADE_Y + linha * TAMANHO_CELULA
-            pygame.draw.rect(screen, PRETO, (x, y, TAMANHO_CELULA, TAMANHO_CELULA), 1)
-
-def pegar_celula(pos):
-    mx, my = pos
-    col = (mx - GRADE_X) // TAMANHO_CELULA
-    lin = (my - GRADE_Y) // TAMANHO_CELULA
-    if 0 <= col < COLUNAS and 0 <= lin < LINHAS:
-        return lin, col
-    return None
-
-def draw():
-    screen.fill(BRANCO)
-    desenhar_grade()
-
-    # desenha seringa
-    screen.blit(seringa_img, seringa_caixa)
-
-    for linha in range(LINHAS):
-        for coluna in range(COLUNAS):
-            celula = grade[linha][coluna]
-            if isinstance(celula, Rockeiro):
-                celula.draw(screen)
-
-    for linha in range(LINHAS):
-        for coluna in range(COLUNAS):
-            celula = grade[linha][coluna]
-            if isinstance(celula, Rockeiro):
-                for proj in celula.projeteis:
-                    proj.draw(screen)
-
-    pygame.display.flip()
+    for lin in range(LINHAS):
+        for col in range(COLUNAS):
+            x = GRADE_X + col * TAMANHO_CELULA
+            y = GRADE_Y + lin * TAMANHO_CELULA
+            pygame.draw.rect(screen, (200, 200, 200), (x, y, TAMANHO_CELULA, TAMANHO_CELULA), 1)
+            if grade[lin][col]:
+                grade[lin][col].draw(screen)
 
 def main():
-    global pa_mode
-    running = True
-    while running:
-        clock.tick(FPS)
+    global personagem_selecionado, pa_mode
+    clock = pygame.time.Clock()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    while True:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if seringa_caixa.collidepoint(event.pos):
+            elif evento.type == pygame.MOUSEBUTTONDOWN:
+                x, y = evento.pos
+
+                # clique nos botões
+                for nome, rect in botoes.items():
+                    if rect.collidepoint(x, y):
+                        personagem_selecionado = nome
+                        pa_mode = False  # cancela pá ao selecionar personagem
+                        print(f"Selecionado: {nome}")
+
+                # clique na seringa -> alterna modo pá
+                if seringa_caixa.collidepoint(x, y):
                     pa_mode = not pa_mode
+                    personagem_selecionado = None
                     print(f"Modo pá {'ativado' if pa_mode else 'desativado'}")
-                else:
-                    celula = pegar_celula(event.pos)
-                    if celula:
-                        lin, col = celula
-                        if pa_mode:
-                            if isinstance(grade[lin][col], Rockeiro):
-                                grade[lin][col] = None
-                                print(f"Removeu na célula: linha {lin}, coluna {col}")
-                        else:
-                            if grade[lin][col] is None:
-                                grade[lin][col] = Rockeiro(lin, col)
-                                print(f"Plantou na célula: linha {lin}, coluna {col}")
 
-        for linha in range(LINHAS):
-            for coluna in range(COLUNAS):
-                celula = grade[linha][coluna]
-                if isinstance(celula, Rockeiro):
-                    celula.update()
+                # clique na grade
+                col = (x - GRADE_X) // TAMANHO_CELULA
+                lin = (y - GRADE_Y) // TAMANHO_CELULA
+                if 0 <= lin < LINHAS and 0 <= col < COLUNAS:
+                    if pa_mode:
+                        if grade[lin][col]:
+                            grade[lin][col] = None
+                            print(f"Personagem removido em linha {lin}, coluna {col}")
+                    else:
+                        if grade[lin][col] is None and personagem_selecionado:
+                            grade[lin][col] = personagens_disponiveis[personagem_selecionado](lin, col)
 
-        draw()
+        # --- Desenho ---
+        screen.fill((60, 60, 60))
+        desenhar_grade()
+        desenhar_botoes()
 
-    pygame.quit()
+        # desenha a seringa
+        screen.blit(seringa_img, seringa_caixa)
+
+        # destaque se modo pá ativo
+        if pa_mode:
+            pygame.draw.rect(screen, (0, 255, 0), seringa_caixa, 3)
+
+        # atualiza personagens
+        for lin in range(LINHAS):
+            for col in range(COLUNAS):
+                if grade[lin][col]:
+                    grade[lin][col].update()
+                    grade[lin][col].draw(screen)
+
+        pygame.display.flip()
+        clock.tick(FPS)
 
 if __name__ == "__main__":
     main()

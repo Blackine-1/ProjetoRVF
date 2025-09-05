@@ -1,6 +1,6 @@
 import pygame
 import os
-import config  # importa o módulo inteiro para evitar import circular
+from config import GRADE_X, GRADE_Y, TAMANHO_CELULA, screen
 
 class Projetil:
     def __init__(self, x, y, vx=4):
@@ -15,34 +15,54 @@ class Projetil:
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+
 class Rockeiro:
     def __init__(self, linha, coluna):
         self.linha = linha
         self.coluna = coluna
-        self.image_original = pygame.image.load(os.path.join('assets', 'ozzy', '0.png'))
-        self.image = None
-        self.rect = None
+        self.frames = [
+            pygame.image.load(os.path.join('assets', 'ozzy', '0.png')).convert_alpha(),
+            pygame.image.load(os.path.join('assets', 'ozzy', '1.png')).convert_alpha(),
+            pygame.image.load(os.path.join('assets', 'ozzy', '2.png')).convert_alpha(),
+            pygame.image.load(os.path.join('assets', 'ozzy', '3.png')).convert_alpha(),
+            pygame.image.load(os.path.join('assets', 'ozzy', '4.png')).convert_alpha(),
+            pygame.image.load(os.path.join('assets', 'ozzy', '5.png')).convert_alpha(),
+            pygame.image.load(os.path.join('assets', 'ozzy', '6.png')).convert_alpha(),
+        ]
+        self.frame_index = 0
+        self.image = self.frames[self.frame_index]
+        self.rect = self.image.get_rect()
+        self.ultimo_frame = pygame.time.get_ticks()
+        self.anim_speed = 200
         self.projeteis = []
         self.ultimo_tiro = pygame.time.get_ticks()
         self.cooldown = 500
-        self.atualizar_posicao()
+        self.atualizar_posicao(GRADE_X, GRADE_Y, TAMANHO_CELULA)
 
-    def atualizar_posicao(self):
-        x = config.GRADE_X + self.coluna * config.TAMANHO_CELULA + 5
-        y = config.GRADE_Y + self.linha * config.TAMANHO_CELULA + 5
-        self.image = pygame.transform.scale(self.image_original, (config.TAMANHO_CELULA - 10, config.TAMANHO_CELULA - 10))
-        self.rect = self.image.get_rect(topleft=(x, y))
+    def atualizar_posicao(self, grade_x, grade_y, tamanho_celula):
+        x = grade_x + self.coluna * tamanho_celula + 5
+        y = grade_y + self.linha * tamanho_celula + 5
+        self.rect.topleft = (x, y)
 
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
+    def animar(self):
+        agora = pygame.time.get_ticks()
+        if agora - self.ultimo_frame > self.anim_speed:
+            self.frame_index = (self.frame_index + 1) % len(self.frames)
+            self.image = self.frames[self.frame_index]
+            self.ultimo_frame = agora
 
     def update(self):
+        self.animar()
         self.atirar()
         for proj in self.projeteis:
             proj.update()
-
-        largura_tela = config.screen.get_width()
+        largura_tela = screen.get_width()
         self.projeteis = [p for p in self.projeteis if p.rect.x < largura_tela]
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        for proj in self.projeteis:
+            proj.draw(surface)
 
     def atirar(self):
         agora = pygame.time.get_ticks()

@@ -1,11 +1,11 @@
 import pygame
 
 # Configurações da tela
-Tlargura = 1366
-Taltura = 768
+TLARGURA = 1366
+TALTURA = 768
 
 pygame.init()
-screen = pygame.display.set_mode((Tlargura, Taltura))
+screen = pygame.display.set_mode((TLARGURA, TALTURA))
 pygame.display.set_caption("Rockeiros vs Funkeiros")
 
 FPS = 60
@@ -17,7 +17,9 @@ PRETO = (0, 0, 0)
 
 # Grade
 LINHAS = 5
-COLUNAS = 8
-TAMANHO_CELULA = 70
+COLUNAS = 12
+TAMANHO_CELULA = 80
 GRADE_X = 50
 GRADE_Y = 50
+OFFSET_X = -150
+OFFSET_Y = 150
