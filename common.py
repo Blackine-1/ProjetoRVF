@@ -1,2 +1,2 @@
 from config import *
-from rockeiro import *
+from personagens.ozzy import *
