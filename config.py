@@ -7,7 +7,7 @@ TLARGURA = 1366
 TALTURA = 768
 
 FPS = 100
-volume = 0.01
+volume = 0.1
 
 
 # Grade
@@ -30,7 +30,7 @@ pygame.display.set_caption("Jogo de Rockeiro")
 
 
 # --- Carrega mapa ---
-mapa_img = pygame.image.load(os.path.join('assets', 'mapa', 'mapa.jfif')).convert()
+mapa_img = pygame.image.load(os.path.join('assets', 'mapa', 'grasspath.png')).convert()
 mapa_img = pygame.transform.scale(mapa_img, (TLARGURA, TALTURA))  # ajusta à tela
 
 def desenhar_mapa():

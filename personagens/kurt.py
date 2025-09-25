@@ -19,12 +19,12 @@ class RockeiroKurt(AtiradorBase):
         proj_config = {
             "frames": proj_frames,
             "dano": 25,
-            "vx": 4,
+            "vx": 6,
             "anim_speed": 200
         }
 
         super().__init__(linha, coluna, hp=100,
                          idle_frames=idle, attack_frames=attack,
-                         cooldown=1020, anim_speed=200,
+                         cooldown=800, anim_speed=200,
                          proj_config=proj_config,
                          dispara_no_meio=True)

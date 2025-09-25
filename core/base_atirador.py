@@ -1,3 +1,4 @@
+# core/base_atirador.py
 import pygame
 from config import GRADE_X, GRADE_Y, TAMANHO_CELULA, TLARGURA
 from core.projetil import ProjetilBase
@@ -5,7 +6,7 @@ from core.projetil import ProjetilBase
 class AtiradorBase:
     def __init__(self, linha, coluna, hp, idle_frames, attack_frames,
                  cooldown=500, anim_speed=200, proj_config=None,
-                 dispara_no_meio=False):
+                 dispara_no_meio=False, tiros_duplos=False):
         self.hp = hp
         self.linha = linha
         self.coluna = coluna
@@ -27,6 +28,7 @@ class AtiradorBase:
         self.atacando = False
         self.tiro_disparado = False
         self.dispara_no_meio = dispara_no_meio
+        self.tiros_duplos = tiros_duplos
         self.proj_config = proj_config or {}
 
         self.atualizar_posicao(GRADE_X, GRADE_Y, TAMANHO_CELULA)
@@ -36,8 +38,28 @@ class AtiradorBase:
         y = grade_y + self.linha * tamanho_celula + 5
         self.rect.topleft = (x, y)
 
-    def criar_projetil(self):
-        return ProjetilBase(self.rect.right, self.rect.centery, **self.proj_config)
+    def criar_projetil(self, x=None, y=None):
+        # x e y podem ser passados ou usa o centro do personagem
+        x = x or self.rect.right
+        y = y or self.rect.centery
+        proj = ProjetilBase(x, y,
+                            self.proj_config.get("vx", 10),
+                            self.proj_config.get("dano", 10),
+                            self.proj_config.get("frames", []),
+                            self.proj_config.get("anim_speed", 100))
+        if self.tiros_duplos:
+            proj1 = ProjetilBase(x, y - 5,
+                                 self.proj_config.get("vx", 10),
+                                 self.proj_config.get("dano", 10),
+                                 self.proj_config.get("frames", []),
+                                 self.proj_config.get("anim_speed", 100))
+            proj2 = ProjetilBase(x, y + 5,
+                                 self.proj_config.get("vx", 10),
+                                 self.proj_config.get("dano", 10),
+                                 self.proj_config.get("frames", []),
+                                 self.proj_config.get("anim_speed", 100))
+            return [proj1, proj2]
+        return [proj]
 
     def animar(self):
         frames = self.frames_attack if self.atacando else self.frames_idle
@@ -52,7 +74,8 @@ class AtiradorBase:
                                 (self.frame_index == meio and not self.tiro_disparado)
 
                 if deve_disparar:
-                    self.projeteis.append(self.criar_projetil())
+                    novos_proj = self.criar_projetil()
+                    self.projeteis.extend(novos_proj)
                     self.ultimo_tiro = agora
                     self.tiro_disparado = True
 

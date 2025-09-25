@@ -7,7 +7,7 @@ class RockeiroAxl(AtiradorBase):
         idle = [pygame.transform.scale(
             pygame.image.load(os.path.join('assets', 'axlrose', f'{i}.png')).convert_alpha(),
             PERSONAGEM_SIZE
-        ) for i in range(1)]
+        ) for i in range(5)]
 
         attack = [pygame.transform.scale(
             pygame.image.load(os.path.join('assets', 'axlT', f'{i}.png')).convert_alpha(),
@@ -19,8 +19,8 @@ class RockeiroAxl(AtiradorBase):
 
         proj_config = {
             "frames": proj_frames,
-            "dano": 10,
-            "vx": 6,
+            "dano": 15,
+            "vx": 7,
             "anim_speed": 150
         }
 
